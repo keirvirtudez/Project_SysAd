@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Group 5{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Welcome, {{ user.username }}! 👋</h2>
+    <div style="margin-top: 10px;">
+        <span class="security-badge badge-mfa">Role: {{ user.role }}</span>
+        <span class="security-badge badge-encrypted">Project: {{ user.project or 'Default' }}</span>
+        {% if user.mfa_enabled %}
+        <span class="security-badge badge-encrypted">MFA: Enabled</span>
+        {% else %}
+        <span class="security-badge badge-admin">MFA: Disabled</span>
+        {% endif %}
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+    <div class="card">
+        <h3>📁 Your Files</h3>
+        <p style="font-size: 36px; font-weight: bold; color: #667eea;">{{ file_count }}</p>
+        <p>Encrypted files stored</p>
+        <a href="{{ url_for('file_manager') }}" class="btn btn-primary">Manage Files</a>
+    </div>
+    
+    <div class="card">
+        <h3>🔐 Security Status</h3>
+        <p><span class="status-indicator status-active"></span> Multi-AZ: Active</p>
+        <p><span class="status-indicator status-active"></span> WAF: Protecting</p>
+        <p><span class="status-indicator status-active"></span> Auto-Scaling: Enabled</p>
+        <p><span class="status-indicator status-active"></span> Encryption: AES-256</p>
+    </div>
+    
+    <div class="card">
+        <h3>⚙️ Account</h3>
+        {% if not user.mfa_enabled %}
+        <p style="color: #e74c3c; margin-bottom: 10px;">MFA is not enabled!</p>
+        <a href="{{ url_for('setup_mfa', user_id=user.id) }}" class="btn btn-primary">Enable MFA</a>
+        {% else %}
+        <p style="color: #28a745;">Your account is secure</p>
+        <a href="{{ url_for('setup_mfa', user_id=user.id) }}" class="btn btn-primary">Reconfigure MFA</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <h3>📋 Recent Activity</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>Resource</th>
+                <th>Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.action }}</td>
+                <td>{{ log.resource }}</td>
+                <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    {% if log.success %}
+                    <span style="color: #28a745;">✓ Success</span>
+                    {% else %}
+                    <span style="color: #e74c3c;">✗ Failed</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

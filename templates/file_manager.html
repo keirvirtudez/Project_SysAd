@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Manager - Group 5 Cloud Security</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Navbar */
+        nav {
+            background: #1a1a2e;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        nav .brand {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        nav .nav-links a {
+            color: #ccc;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        nav .nav-links a:hover { color: white; }
+        nav .nav-links a.logout {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+        }
+
+        /* Flash messages */
+        .flash { padding: 12px 20px; margin: 15px 30px; border-radius: 8px; font-size: 0.9rem; }
+        .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.danger  { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .flash.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+
+        /* Main content */
+        .container {
+            max-width: 960px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .page-header h2 { font-size: 1.5rem; color: #1a1a2e; }
+        .page-header p { color: #666; font-size: 0.9rem; margin-top: 4px; }
+
+        /* Upload form */
+        .upload-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .upload-card h3 {
+            font-size: 1.1rem;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .upload-area {
+            border: 2px dashed #a78bfa;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            background: #f8f5ff;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+        .upload-area:hover { border-color: #7c3aed; background: #f0ebff; }
+        .upload-area input[type="file"] { display: none; }
+        .upload-area label {
+            cursor: pointer;
+            display: block;
+            font-size: 0.95rem;
+            color: #6b7280;
+        }
+        .upload-area label span {
+            display: block;
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        .upload-area .file-name {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #7c3aed;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary { background: #7c3aed; color: white; }
+        .btn-primary:hover { background: #6d28d9; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: white; font-size: 0.8rem; padding: 6px 14px; }
+        .btn-danger:hover { background: #dc2626; }
+
+        /* Files table */
+        .files-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px 28px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .files-card h3 {
+            font-size: 1.1rem;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        thead th {
+            background: #f3f4f6;
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        tbody tr { border-bottom: 1px solid #f3f4f6; transition: background 0.15s; }
+        tbody tr:hover { background: #faf5ff; }
+        tbody td { padding: 12px 14px; color: #555; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-encrypted { background: #d1fae5; color: #065f46; }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #9ca3af;
+        }
+        .empty-state span { font-size: 3rem; display: block; margin-bottom: 12px; }
+        .empty-state p { font-size: 0.95rem; }
+
+        .security-note {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 0.82rem;
+            color: #1e40af;
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav>
+    <div class="brand">🔒 Group 5 Cloud Security System</div>
+    <div class="nav-links">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/files">Files</a>
+        <a href="/logout" class="logout">Logout</a>
+    </div>
+</nav>
+
+<!-- Flash messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="container">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h2>📁 File Manager</h2>
+            <p>Logged in as <strong>{{ user.username }}</strong> | Role: {{ user.role }} | All files encrypted with AES-256</p>
+        </div>
+        <a href="/dashboard" class="btn btn-success">← Back to Dashboard</a>
+    </div>
+
+    <!-- Upload Card -->
+    <div class="upload-card">
+        <h3>⬆️ Upload New File</h3>
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" name="file" onchange="showFileName(this)">
+                <label for="fileInput">
+                    <span>📂</span>
+                    Click to select a file to upload
+                </label>
+                <div class="file-name" id="fileName"></div>
+            </div>
+            <button type="submit" class="btn btn-primary">🔐 Upload & Encrypt</button>
+            <div class="security-note">
+                🛡️ All uploaded files are automatically encrypted with AES-256 before storage.
+            </div>
+        </form>
+    </div>
+
+    <!-- Files List -->
+    <div class="files-card">
+        <h3>📋 Your Files ({{ files|length }})</h3>
+
+        {% if files %}
+        <table>
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Size</th>
+                    <th>Uploaded</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in files %}
+                <tr>
+                    <td>📄 {{ file.original_name }}</td>
+                    <td>{{ (file.file_size / 1024)|round(1) }} KB</td>
+                    <td>{{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td><span class="badge badge-encrypted">🔒 Encrypted</span></td>
+                    <td>
+                        <a href="/download/{{ file.id }}" class="btn btn-danger">⬇ Download</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <span>📭</span>
+            <p>No files uploaded yet. Upload your first file above!</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+    function showFileName(input) {
+        const label = document.getElementById('fileName');
+        if (input.files && input.files[0]) {
+            label.textContent = '✅ Selected: ' + input.files[0].name;
+        }
+    }
+</script>
+
+</body>
+</html>

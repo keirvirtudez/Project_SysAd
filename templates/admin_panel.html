@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Group 5 Cloud Security</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        nav {
+            background: #1a1a2e;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        nav .brand { color: white; font-size: 1.2rem; font-weight: 700; }
+        nav .nav-links a { color: #ccc; text-decoration: none; margin-left: 20px; font-size: 0.95rem; }
+        nav .nav-links a:hover { color: white; }
+        nav .nav-links a.logout { background: #e74c3c; color: white; padding: 8px 16px; border-radius: 6px; }
+
+        .flash { padding: 12px 20px; margin: 15px 30px; border-radius: 8px; font-size: 0.9rem; }
+        .flash.success { background: #d4edda; color: #155724; }
+        .flash.danger  { background: #f8d7da; color: #721c24; }
+        .flash.warning { background: #fff3cd; color: #856404; }
+
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+
+        .page-header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .page-header h2 { font-size: 1.5rem; color: #1a1a2e; }
+        .page-header p { color: #666; font-size: 0.9rem; margin-top: 4px; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px 28px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .card h3 { font-size: 1.1rem; color: #1a1a2e; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+        label { display: block; font-size: 0.82rem; font-weight: 600; color: #374151; margin-bottom: 4px; margin-top: 12px; }
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+        input:focus, select:focus { border-color: #7c3aed; }
+
+        .btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 16px;
+        }
+        .btn-primary { background: #7c3aed; color: white; width: 100%; text-align: center; }
+        .btn-primary:hover { background: #6d28d9; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        thead th { background: #f3f4f6; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+        tbody tr { border-bottom: 1px solid #f3f4f6; }
+        tbody tr:hover { background: #faf5ff; }
+        tbody td { padding: 10px 12px; color: #555; }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-admin    { background: #fde8d8; color: #9a3412; }
+        .badge-member   { background: #dbeafe; color: #1e40af; }
+        .badge-operator { background: #d1fae5; color: #065f46; }
+        .badge-auditor  { background: #fef3c7; color: #92400e; }
+
+        .full-width { grid-column: 1 / -1; }
+
+        .stat-row { display: flex; gap: 16px; margin-bottom: 20px; }
+        .stat-box { flex: 1; background: #f8f5ff; border-radius: 10px; padding: 16px; text-align: center; }
+        .stat-box .num { font-size: 2rem; font-weight: 700; color: #7c3aed; }
+        .stat-box .lbl { font-size: 0.78rem; color: #666; margin-top: 4px; }
+
+        .log-success { color: #10b981; font-weight: 600; }
+        .log-fail    { color: #ef4444; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="brand">🔒 Group 5 Cloud Security System</div>
+    <div class="nav-links">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/files">Files</a>
+        <a href="/admin">Admin</a>
+        <a href="/logout" class="logout">Logout</a>
+    </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="container">
+
+    <div class="page-header">
+        <h2>⚙️ Admin Panel</h2>
+        <p>Logged in as <strong>{{ user.username }}</strong> | Full system access</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-row">
+        <div class="stat-box">
+            <div class="num">{{ users|length }}</div>
+            <div class="lbl">Total Users</div>
+        </div>
+        <div class="stat-box">
+            <div class="num">{{ projects|length }}</div>
+            <div class="lbl">Projects</div>
+        </div>
+        <div class="stat-box">
+            <div class="num">{{ logs|length }}</div>
+            <div class="lbl">Recent Logs</div>
+        </div>
+    </div>
+
+    <div class="grid">
+
+        <!-- Create User -->
+        <div class="card">
+            <h3>👤 Create New User</h3>
+            <form method="POST" action="/admin/create-user">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label>Username</label>
+                <input type="text" name="username" placeholder="Enter username" required>
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Enter password" required>
+                <label>Email</label>
+                <input type="email" name="email" placeholder="user@example.com">
+                <label>Role</label>
+                <select name="role">
+                    <option value="member">Member</option>
+                    <option value="network-operator">Network Operator</option>
+                    <option value="sec-auditor">Security Auditor</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <label>Project</label>
+                <input type="text" name="project" placeholder="Project name">
+                <button type="submit" class="btn btn-primary">➕ Create User & Sync OpenStack</button>
+            </form>
+        </div>
+
+        <!-- Users List -->
+        <div class="card">
+            <h3>👥 All Users</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Project</th>
+                        <th>MFA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>{{ u.username }}</td>
+                        <td>
+                            <span class="badge badge-{{ u.role }}">{{ u.role }}</span>
+                        </td>
+                        <td>{{ u.project or 'N/A' }}</td>
+                        <td>{{ '✅' if u.mfa_enabled else '❌' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Access Logs -->
+        <div class="card full-width">
+            <h3>📋 Recent Access Logs</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Action</th>
+                        <th>Resource</th>
+                        <th>IP Address</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.user_id or 'N/A' }}</td>
+                        <td>{{ log.action }}</td>
+                        <td>{{ log.resource or 'N/A' }}</td>
+                        <td>{{ log.ip_address }}</td>
+                        <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td class="{{ 'log-success' if log.success else 'log-fail' }}">
+                            {{ '✓ Success' if log.success else '✗ Failed' }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

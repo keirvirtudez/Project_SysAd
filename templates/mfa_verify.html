@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFA Verification - Group 5 Cloud Security</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .icon { font-size: 3rem; margin-bottom: 12px; }
+        h2 { font-size: 1.6rem; color: #1a1a2e; margin-bottom: 8px; }
+        p { color: #666; font-size: 0.9rem; margin-bottom: 24px; }
+        .flash { padding: 10px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.88rem; }
+        .flash.danger { background: #f8d7da; color: #721c24; }
+        .flash.success { background: #d4edda; color: #155724; }
+        .flash.warning { background: #fff3cd; color: #856404; }
+        label { display: block; text-align: left; font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1.4rem;
+            text-align: center;
+            letter-spacing: 8px;
+            color: #1a1a2e;
+            outline: none;
+            transition: border 0.2s;
+            margin-bottom: 20px;
+        }
+        input[type="text"]:focus { border-color: #7c3aed; }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background: #6d28d9; }
+        .back-link { display: block; margin-top: 16px; color: #7c3aed; font-size: 0.85rem; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        .hint { background: #eff6ff; border-radius: 8px; padding: 10px 14px; font-size: 0.82rem; color: #1e40af; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="icon">🔐</div>
+    <h2>MFA Verification</h2>
+    <p>Welcome, <strong>{{ username }}</strong>! Enter the 6-digit code from your authenticator app.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="hint">📱 Open Google Authenticator or Authy and enter the current code for <strong>Group5-Cloud-Security</strong></div>
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>6-Digit Code</label>
+        <input type="text" name="mfa_code" maxlength="6" placeholder="000000" autofocus autocomplete="off">
+        <button type="submit">✅ Verify & Login</button>
+    </form>
+    <a href="/login" class="back-link">← Back to Login</a>
+</div>
+</body>
+</html>
